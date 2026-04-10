@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FraudShield - Advanced Fraud Detection</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      text-align: center;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .hero { max-width: 700px; }
+    h1 { font-size: 3rem; margin-bottom: 0.5rem; }
+    .subtitle { font-size: 1.2rem; margin-bottom: 2rem; color: #f1f1f1; }
+    .spinner {
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #e74c3c;
+      border-radius: 50%;
+      width: 60px; height: 60px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .progress-container {
+      width: 80%; background: rgba(255,255,255,0.2);
+      border-radius: 10px; margin: 20px auto; height: 15px;
+    }
+    .progress-bar {
+      height: 15px; width: 0%; background: #e74c3c;
+      border-radius: 10px; transition: width 1s linear;
+    }
+    .countdown { font-size: 1rem; margin-top: 10px; color: #f1f1f1; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>🚨 FraudShield</h1>
+    <p class="subtitle">Protecting Your Transactions with Machine Learning</p>
+
+    <div class="spinner"></div>
+    <div class="progress-container"><div class="progress-bar" id="progress-bar"></div></div>
+    <p class="countdown">Redirecting in <span id="countdown">25</span> seconds...</p>
+  </div>
+
+  <script>
+    let timeLeft = 25;
+    const countdownEl = document.getElementById("countdown");
+    const progressBar = document.getElementById("progress-bar");
+
+    const timer = setInterval(function() {
+      timeLeft--;
+      countdownEl.textContent = timeLeft;
+      progressBar.style.width = ((25 - timeLeft) / 25 * 100) + "%";
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        window.location.href = "https://creddfraud.hostmora.app/app"; 
+        // 🔗 Replace with your actual Streamlit app URL
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
