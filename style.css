@@ -1,0 +1,82 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.hero {
+  background: url('fraudshield-bg.jpg') no-repeat center center/cover;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.overlay {
+  background: rgba(0,0,0,0.6);
+  padding: 40px;
+  border-radius: 15px;
+  text-align: center;
+  color: white;
+  max-width: 800px;
+}
+
+h1 {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: #f1f1f1;
+}
+
+.metrics {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+}
+
+.metric {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.spinner {
+  border: 8px solid #f3f3f3;
+  border-top: 8px solid #e74c3c;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.progress-container {
+  width: 80%;
+  background: rgba(255,255,255,0.2);
+  border-radius: 10px;
+  margin: 20px auto;
+  height: 15px;
+}
+
+.progress-bar {
+  height: 15px;
+  width: 0%;
+  background: #e74c3c;
+  border-radius: 10px;
+  transition: width 1s linear;
+}
+
+.countdown {
+  font-size: 1rem;
+  margin-top: 10px;
+  color: #f1f1f1;
+}
