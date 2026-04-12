@@ -58,7 +58,8 @@ st.markdown("---")
 @st.cache_data
 def load_data():
     """Load and cache the dataset"""
-    df = pd.read_csv('creditcard.csv')
+    df = pd.read_csv('https://drive.google.com/uc?id=1YKNYRzROwSMo8DD-TRBD4aukXLnT2JWM
+')
     return df
 
 @st.cache_data
