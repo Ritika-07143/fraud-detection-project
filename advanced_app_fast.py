@@ -58,10 +58,10 @@ st.markdown("---")
 # LOAD DATA (NO CACHE FOR DEBUGGING)
 # ============================================
 def load_data():
-    """Load the dataset (no cache for debugging)"""
-    df = pd.read_csv("https://drive.google.com/uc?id=1sVzkzafiC9D5tasIvfF7EOTc9Fvw3SP0")
+    """Load the dataset from Dropbox direct link"""
+    df = pd.read_csv("https://www.dropbox.com/scl/fi/rxahy6u2n609wt08vlfz6/creditcard.csv?rlkey=c4u6usf0ecdn51g5csgbmreou&st=9vu7kb2o&dl=1")
     return df
-
+    
 def preprocess_data(test_size=0.2):
     """Preprocess data once (no cache for debugging)"""
     df = load_data()
