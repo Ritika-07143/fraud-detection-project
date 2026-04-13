@@ -60,7 +60,7 @@ st.markdown("---")
 @st.cache_data
 def load_data():
     """Load and cache the dataset"""
-    df = pd.read_csv("https://drive.google.com/uc?id=1QNjx_26EdzELdxvYOwI-WDJhokCZB98u"))
+    df = pd.read_csv("https://drive.google.com/uc?id=1QNjx_26EdzELdxvYOwI-WDJhokCZB98u")
     return df
 
 @st.cache_data
