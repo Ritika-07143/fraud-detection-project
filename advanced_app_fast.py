@@ -4,15 +4,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import (
-    classification_report, confusion_matrix, roc_auc_score, roc_curve,
-    precision_recall_curve, auc, f1_score, precision_score, recall_score
-)
+from sklearn.metrics import f1_score
 from imblearn.over_sampling import SMOTE
-import xgboost as xgb
 import lightgbm as lgb
 import warnings
 warnings.filterwarnings('ignore')
@@ -59,53 +54,34 @@ st.markdown("---")
 # ============================================
 @st.cache_data
 def load_data():
-    """Load and cache the dataset"""
     df = pd.read_csv("https://www.dropbox.com/scl/fi/rxahy6u2n609wt08vlfz6/creditcard.csv?rlkey=c4u6usf0ecdn51g5csgbmreou&st=9vu7kb2o&dl=1")
     return df
 
 @st.cache_data
-def preprocess_data(test_size=0.2):
-    """Preprocess data once and cache it"""
+def preprocess_data(test_size=0.2, sample_size=50000, apply_smote=False):
     df = load_data()
 
-    # Detect fraud label column
-    fraud_col = None
-    for candidate in ["Class", "Fraud", "Target", "Label"]:
-        if candidate in df.columns:
-            fraud_col = candidate
-            break
+    # Fraud column
+    fraud_col = "Class"
 
-    if fraud_col is None:
-        st.error("❌ No fraud label column found in dataset. Expected one of: Class, Fraud, Target, Label.")
-        return None, None, None, None, None, None, df, None
+    # Sample for speed
+    df_sample = df.sample(n=sample_size, random_state=42)
 
-    X = df.drop(fraud_col, axis=1)
-    y = df[fraud_col]
+    X = df_sample.drop(fraud_col, axis=1)
+    y = df_sample[fraud_col]
 
-    # Scale features
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # Train-test split with stratification
     X_train, X_test, y_train, y_test = train_test_split(
         X_scaled, y, test_size=test_size, stratify=y, random_state=42
     )
 
-    # Apply SMOTE
-    smote = SMOTE(random_state=42)
-    X_train_balanced, y_train_balanced = smote.fit_resample(X_train, y_train)
+    if apply_smote:
+        smote = SMOTE(random_state=42)
+        X_train, y_train = smote.fit_resample(X_train, y_train)
 
-    return X_train_balanced, X_test, y_train_balanced, y_test, X.columns, scaler, df, fraud_col
-
-# Load initial data
-df = load_data()
-
-# Detect fraud column for metrics
-fraud_col = None
-for candidate in ["Class", "Fraud", "Target", "Label"]:
-    if candidate in df.columns:
-        fraud_col = candidate
-        break
+    return X_train, X_test, y_train, y_test, df, fraud_col
 
 # ============================================
 # SIDEBAR
@@ -114,14 +90,14 @@ st.sidebar.title("⚙️ Configuration")
 
 models_to_train = st.sidebar.multiselect(
     "Select Models",
-    ['Logistic Regression', 'Random Forest', 'XGBoost', 'LightGBM', 'Gradient Boosting'],
-    default=['LightGBM', 'XGBoost']
+    ['Logistic Regression', 'LightGBM'],
+    default=['LightGBM']
 )
 
-use_cache = st.sidebar.checkbox("Use Cached Results", value=True)
+apply_smote = st.sidebar.checkbox("Apply SMOTE", value=False)
 
 st.sidebar.markdown("---")
-st.sidebar.info("✅ Optimized for speed with caching and parallel processing")
+st.sidebar.info("✅ Sampling + SMOTE toggle for faster performance")
 
 # ============================================
 # TABS
@@ -138,40 +114,30 @@ tab1, tab2, tab3, tab4 = st.tabs([
 # ============================================
 with tab1:
     st.header("📊 Dataset Overview")
+    df = load_data()
+    fraud_col = "Class"
 
-    if fraud_col is None:
-        st.error("❌ No fraud label column found in dataset. Please upload the correct Kaggle dataset with 'Class' column.")
-    else:
-        col1, col2, col3, col4 = st.columns(4)
-        with col1:
-            st.metric("Total", f"{len(df):,}")
-        with col2:
-            st.metric("Frauds", f"{df[fraud_col].sum():,}")
-        with col3:
-            st.metric("Legit", f"{(df[fraud_col]==0).sum():,}")
-        with col4:
-            fraud_pct = (df[fraud_col].sum() / len(df)) * 100
-            st.metric("Fraud %", f"{fraud_pct:.3f}%")
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total", f"{len(df):,}")
+    with col2:
+        st.metric("Frauds", f"{df[fraud_col].sum():,}")
+    with col3:
+        st.metric("Legit", f"{(df[fraud_col]==0).sum():,}")
+    with col4:
+        fraud_pct = (df[fraud_col].sum() / len(df)) * 100
+        st.metric("Fraud %", f"{fraud_pct:.3f}%")
 
-        st.markdown("---")
+    st.markdown("---")
 
-        # Class Distribution Pie Chart
-        st.subheader("Class Distribution")
-        class_counts = df[fraud_col].value_counts()
-        fig, ax = plt.subplots(figsize=(6, 4))
-        colors = ['#2ecc71', '#e74c3c']
-        wedges, texts, autotexts = ax.pie(
-            class_counts.values, 
-            labels=['Legitimate', 'Fraud'], 
-            autopct='%1.1f%%',
-            colors=colors, 
-            startangle=90
-        )
-        for autotext in autotexts:
-            autotext.set_color('white')
-            autotext.set_fontweight('bold')
-        plt.tight_layout()
-        st.pyplot(fig, use_container_width=True)
+    st.subheader("Class Distribution")
+    class_counts = df[fraud_col].value_counts()
+    fig, ax = plt.subplots(figsize=(6, 4))
+    colors = ['#2ecc71', '#e74c3c']
+    ax.pie(class_counts.values, labels=['Legitimate', 'Fraud'], autopct='%1.1f%%',
+           colors=colors, startangle=90)
+    plt.tight_layout()
+    st.pyplot(fig, use_container_width=True)
 
 # ============================================
 # TAB 2: MODELS
@@ -179,59 +145,36 @@ with tab1:
 with tab2:
     st.header("🤖 Model Training")
 
-    if fraud_col is not None:
-        X_train_balanced, X_test, y_train_balanced, y_test, feature_names, scaler, df, fraud_col = preprocess_data()
+    X_train, X_test, y_train, y_test, df, fraud_col = preprocess_data(apply_smote=apply_smote)
 
-        results = {}
-        if 'Logistic Regression' in models_to_train:
-            model = LogisticRegression(max_iter=1000)
-            model.fit(X_train_balanced, y_train_balanced)
-            y_pred = model.predict(X_test)
-            results['Logistic Regression'] = f1_score(y_test, y_pred)
+    results = {}
+    if 'Logistic Regression' in models_to_train:
+        model = LogisticRegression(max_iter=1000)
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        results['Logistic Regression'] = f1_score(y_test, y_pred)
 
-        if 'Random Forest' in models_to_train:
-            model = RandomForestClassifier(n_estimators=100, random_state=42)
-            model.fit(X_train_balanced, y_train_balanced)
-            y_pred = model.predict(X_test)
-            results['Random Forest'] = f1_score(y_test, y_pred)
+    if 'LightGBM' in models_to_train:
+        model = lgb.LGBMClassifier()
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_test)
+        results['LightGBM'] = f1_score(y_test, y_pred)
 
-        if 'XGBoost' in models_to_train:
-            model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
-            model.fit(X_train_balanced, y_train_balanced)
-            y_pred = model.predict(X_test)
-            results['XGBoost'] = f1_score(y_test, y_pred)
-
-        if 'LightGBM' in models_to_train:
-            model = lgb.LGBMClassifier()
-            model.fit(X_train_balanced, y_train_balanced)
-            y_pred = model.predict(X_test)
-            results['LightGBM'] = f1_score(y_test, y_pred)
-
-        if 'Gradient Boosting' in models_to_train:
-            model = GradientBoostingClassifier()
-            model.fit(X_train_balanced, y_train_balanced)
-            y_pred = model.predict(X_test)
-            results['Gradient Boosting'] = f1_score(y_test, y_pred)
-
-        st.subheader("Model F1 Scores")
-        for model_name, score in results.items():
-            st.metric(model_name, f"{score:.3f}")
+    st.subheader("Model F1 Scores")
+    for model_name, score in results.items():
+        st.metric(model_name, f"{score:.3f}")
 
 # ============================================
 # TAB 3: RESULTS
 # ============================================
 with tab3:
     st.header("📈 Results")
-
-    st.write("Confusion Matrix and ROC Curve for selected models will appear here.")
-    st.info("Extend this section with plots for deeper analysis.")
+    st.info("Add confusion matrix, ROC curves, or PR curves here for deeper analysis.")
 
 # ============================================
 # TAB 4: BUSINESS
 # ============================================
 with tab4:
     st.header("💼 Business Insights")
-
-    st.write("Translate fraud detection metrics into business impact.")
     st.metric("Estimated Savings", "$1.2M")
     st.metric("False Positive Cost", "$50K")
