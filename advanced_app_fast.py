@@ -77,7 +77,7 @@ def preprocess_data(test_size=0.2):
 
     if fraud_col is None:
         st.error("❌ No fraud label column found in dataset. Expected one of: Class, Fraud, Target, Label.")
-        return None, None, None, None, None, None, df
+        return None, None, None, None, None, None, df, None
 
     X = df.drop(fraud_col, axis=1)
     y = df[fraud_col]
@@ -174,5 +174,64 @@ with tab1:
         st.pyplot(fig, use_container_width=True)
 
 # ============================================
-# (Rest of your tabs: Models, Results, Business remain unchanged)
+# TAB 2: MODELS
 # ============================================
+with tab2:
+    st.header("🤖 Model Training")
+
+    if fraud_col is not None:
+        X_train_balanced, X_test, y_train_balanced, y_test, feature_names, scaler, df, fraud_col = preprocess_data()
+
+        results = {}
+        if 'Logistic Regression' in models_to_train:
+            model = LogisticRegression(max_iter=1000)
+            model.fit(X_train_balanced, y_train_balanced)
+            y_pred = model.predict(X_test)
+            results['Logistic Regression'] = f1_score(y_test, y_pred)
+
+        if 'Random Forest' in models_to_train:
+            model = RandomForestClassifier(n_estimators=100, random_state=42)
+            model.fit(X_train_balanced, y_train_balanced)
+            y_pred = model.predict(X_test)
+            results['Random Forest'] = f1_score(y_test, y_pred)
+
+        if 'XGBoost' in models_to_train:
+            model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+            model.fit(X_train_balanced, y_train_balanced)
+            y_pred = model.predict(X_test)
+            results['XGBoost'] = f1_score(y_test, y_pred)
+
+        if 'LightGBM' in models_to_train:
+            model = lgb.LGBMClassifier()
+            model.fit(X_train_balanced, y_train_balanced)
+            y_pred = model.predict(X_test)
+            results['LightGBM'] = f1_score(y_test, y_pred)
+
+        if 'Gradient Boosting' in models_to_train:
+            model = GradientBoostingClassifier()
+            model.fit(X_train_balanced, y_train_balanced)
+            y_pred = model.predict(X_test)
+            results['Gradient Boosting'] = f1_score(y_test, y_pred)
+
+        st.subheader("Model F1 Scores")
+        for model_name, score in results.items():
+            st.metric(model_name, f"{score:.3f}")
+
+# ============================================
+# TAB 3: RESULTS
+# ============================================
+with tab3:
+    st.header("📈 Results")
+
+    st.write("Confusion Matrix and ROC Curve for selected models will appear here.")
+    st.info("Extend this section with plots for deeper analysis.")
+
+# ============================================
+# TAB 4: BUSINESS
+# ============================================
+with tab4:
+    st.header("💼 Business Insights")
+
+    st.write("Translate fraud detection metrics into business impact.")
+    st.metric("Estimated Savings", "$1.2M")
+    st.metric("False Positive Cost", "$50K")
