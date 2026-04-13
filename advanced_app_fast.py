@@ -55,17 +55,15 @@ st.markdown('<p class="centered-subtitle">Optimized for Speed & Performance</p>'
 st.markdown("---")
 
 # ============================================
-# LOAD DATA (CACHED)
+# LOAD DATA (NO CACHE FOR DEBUGGING)
 # ============================================
-@st.cache_data
 def load_data():
-    """Load and cache the dataset"""
+    """Load the dataset (no cache for debugging)"""
     df = pd.read_csv("https://drive.google.com/uc?id=1sVzkzafiC9D5tasIvfF7EOTc9Fvw3SP0")
     return df
 
-@st.cache_data
 def preprocess_data(test_size=0.2):
-    """Preprocess data once and cache it"""
+    """Preprocess data once (no cache for debugging)"""
     df = load_data()
 
     # Detect fraud label column
@@ -99,6 +97,10 @@ def preprocess_data(test_size=0.2):
 
 # Load initial data
 df = load_data()
+
+# Debug output to confirm dataset
+st.write("Columns loaded:", df.columns.tolist())
+st.write("Dataset shape:", df.shape)
 
 # Detect fraud column for metrics
 fraud_col = None
